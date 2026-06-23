@@ -369,47 +369,55 @@
       return "v-big";
     }
 
+    function getCellSize() {
+      const rect = boardEl.getBoundingClientRect();
+      const size = rect.width;
+      const gap =
+        parseFloat(getComputedStyle(boardEl).getPropertyValue("--gap")) || 8;
+      const pad =
+        parseFloat(getComputedStyle(boardEl).getPropertyValue("padding")) || 8;
+      const cell = (size - pad * 2 - gap * 3) / 4;
+      return { cell, gap, pad };
+    }
+
     function buildBackground() {
       boardEl.querySelectorAll(".cell-bg").forEach((c) => c.remove());
-      const size = boardEl.clientWidth;
-      const gap =
-        parseFloat(getComputedStyle(boardEl).getPropertyValue("--gap")) || 10;
-      const pad = 10;
-      const cell = (size - pad * 2 - gap * 3) / 4;
+      const m = getCellSize();
       for (let r = 0; r < 4; r++) {
         for (let c = 0; c < 4; c++) {
           const div = document.createElement("div");
           div.className = "cell-bg";
-          div.style.width = cell + "px";
-          div.style.height = cell + "px";
-          div.style.left = pad + c * (cell + gap) + "px";
-          div.style.top = pad + r * (cell + gap) + "px";
+          div.style.width = m.cell + "px";
+          div.style.height = m.cell + "px";
+          div.style.left = m.pad + c * (m.cell + m.gap) + "px";
+          div.style.top = m.pad + r * (m.cell + m.gap) + "px";
           boardEl.appendChild(div);
         }
       }
     }
 
-    function getCellMetrics() {
-      const size = boardEl.clientWidth;
-      const gap =
-        parseFloat(getComputedStyle(boardEl).getPropertyValue("--gap")) || 10;
-      const pad = 10;
-      const cell = (size - pad * 2 - gap * 3) / 4;
-      return { cell, gap, pad };
-    }
-
     function positionTile(el, row, col) {
-      const m = getCellMetrics();
+      const m = getCellSize();
+      const left = m.pad + col * (m.cell + m.gap);
+      const top = m.pad + row * (m.cell + m.gap);
       el.style.width = m.cell + "px";
       el.style.height = m.cell + "px";
-      el.style.transform = `translate(${m.pad + col * (m.cell + m.gap)}px, ${m.pad + row * (m.cell + m.gap)}px)`;
-      let fontSize = m.cell * 0.4;
-      if (fontSize < 14) fontSize = 14;
-      if (fontSize > 36) fontSize = 36;
+      el.style.left = left + "px";
+      el.style.top = top + "px";
+      el.style.transform = "none";
+
+      let fontSize = m.cell * 0.42;
+      if (fontSize < 10) fontSize = 10;
+      if (fontSize > 40) fontSize = 40;
+
       const value = parseInt(el.textContent);
-      if (value >= 1000) fontSize = fontSize * 0.7;
-      else if (value >= 500) fontSize = fontSize * 0.8;
-      else if (value >= 100) fontSize = fontSize * 0.9;
+      if (value >= 2048) fontSize = fontSize * 0.55;
+      else if (value >= 1024) fontSize = fontSize * 0.6;
+      else if (value >= 512) fontSize = fontSize * 0.7;
+      else if (value >= 256) fontSize = fontSize * 0.75;
+      else if (value >= 128) fontSize = fontSize * 0.8;
+      else if (value >= 64) fontSize = fontSize * 0.85;
+
       el.style.fontSize = fontSize + "px";
     }
 
@@ -623,7 +631,7 @@
           const dx = e.clientX - touchStart.x;
           const dy = e.clientY - touchStart.y;
           touchStart = null;
-          if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+          if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
           if (Math.abs(dx) > Math.abs(dy)) {
             move(dx > 0 ? "right" : "left");
           } else {
